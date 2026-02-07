@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Github, 
@@ -67,8 +68,7 @@ const BehanceCarousel: React.FC = () => {
   const dragStartPos = useRef(0);
   const dragStartRotation = useRef(0);
   const autoRotateRef = useRef<number>(0);
-  // Fix: Use ReturnType<typeof setTimeout> instead of NodeJS.Timeout to resolve "Cannot find namespace 'NodeJS'" in browser environments
-  const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resumeTimeoutRef = useRef<any>(null);
   
   const itemCount = DESIGN_IMAGES.length;
   const angleStep = 360 / itemCount;
@@ -328,8 +328,6 @@ const TypewriterText: React.FC<{ words: string[] }> = ({ words }) => {
 
     return () => clearTimeout(nextTimeout);
   }, [subIndex, index, reverse, words]);
-
-  const timeoutRef = useRef<any>(null);
 
   return (
     <span className="inline-block min-w-[2ch]">
