@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Github, 
@@ -25,7 +24,8 @@ import {
   Monitor,
   PenTool,
   MessageCircle,
-  Eye
+  Eye,
+  ArrowLeftRight
 } from 'lucide-react';
 import SectionWrapper from './components/SectionWrapper';
 import GeminiCard from './components/GeminiCard';
@@ -50,6 +50,147 @@ const IconMapper: Record<string, any> = {
   PenTool
 };
 
+const DESIGN_IMAGES = [
+  { id: 1, title: 'Girl Illustration', url: 'https://images.unsplash.com/photo-1578632738988-6888af50dec7?auto=format&fit=crop&q=80&w=800' },
+  { id: 2, title: 'Futuristic UI', url: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800' },
+  { id: 3, title: 'Brand Identity', url: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=800' },
+  { id: 4, title: 'Cyber Concept', url: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&q=80&w=800' },
+  { id: 5, title: 'Minimalist Poster', url: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&q=80&w=800' },
+  { id: 6, title: 'Packaging Design', url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800' },
+  { id: 7, title: 'Abstract System', url: 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80&w=800' },
+];
+
+const BehanceCarousel: React.FC = () => {
+  const [rotation, setRotation] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const dragStartPos = useRef(0);
+  const dragStartRotation = useRef(0);
+  const autoRotateRef = useRef<number>(0);
+  // Fix: Use ReturnType<typeof setTimeout> instead of NodeJS.Timeout to resolve "Cannot find namespace 'NodeJS'" in browser environments
+  const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  const itemCount = DESIGN_IMAGES.length;
+  const angleStep = 360 / itemCount;
+  const radius = 450; // Distance from center
+
+  // Auto-rotation logic
+  useEffect(() => {
+    const rotate = () => {
+      if (!isDragging && !isHovered) {
+        setRotation(prev => prev - 0.2);
+      }
+      autoRotateRef.current = requestAnimationFrame(rotate);
+    };
+
+    autoRotateRef.current = requestAnimationFrame(rotate);
+    return () => cancelAnimationFrame(autoRotateRef.current);
+  }, [isDragging, isHovered]);
+
+  const handleStart = (clientX: number) => {
+    setIsDragging(true);
+    dragStartPos.current = clientX;
+    dragStartRotation.current = rotation;
+    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
+  };
+
+  const handleMove = (clientX: number) => {
+    if (!isDragging) return;
+    const deltaX = clientX - dragStartPos.current;
+    const sensitivity = 0.3;
+    setRotation(dragStartRotation.current + deltaX * sensitivity);
+  };
+
+  const handleEnd = () => {
+    setIsDragging(false);
+    resumeTimeoutRef.current = setTimeout(() => {
+      // Logic for snapping or just resuming
+    }, 2000);
+  };
+
+  return (
+    <div className="relative w-full h-[700px] flex items-center justify-center overflow-visible select-none cursor-grab active:cursor-grabbing perspective-[1200px]">
+      {/* 3D Stage */}
+      <div 
+        className="relative w-72 h-[420px] transition-transform duration-100 ease-out preserve-3d will-change-transform"
+        style={{ 
+          transform: `rotateY(${rotation}deg) translateZ(0)`,
+        }}
+        onMouseDown={(e) => handleStart(e.clientX)}
+        onMouseMove={(e) => handleMove(e.clientX)}
+        onMouseUp={handleEnd}
+        onMouseLeave={() => {
+          handleEnd();
+          setIsHovered(false);
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onTouchStart={(e) => handleStart(e.touches[0].clientX)}
+        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+        onTouchEnd={handleEnd}
+      >
+        {DESIGN_IMAGES.map((img, i) => {
+          const itemAngle = i * angleStep;
+          // Calculate the current relative angle to the front (0 degrees)
+          const currentAngle = (rotation + itemAngle) % 360;
+          const normalizedAngle = (currentAngle + 360) % 360;
+          
+          // Focus calculations
+          const diff = Math.min(normalizedAngle, 360 - normalizedAngle);
+          const isFocus = diff < 20;
+          const scale = isFocus ? 1.2 : 0.8;
+          const blur = isFocus ? 0 : Math.min(5, diff / 15);
+          const opacity = isFocus ? 1 : Math.max(0.4, 0.6 - (diff / 180));
+          const zIndex = Math.round(100 - diff);
+
+          return (
+            <div
+              key={img.id}
+              className="absolute inset-0 preserve-3d backface-hidden transition-all duration-500 ease-out flex items-center justify-center group"
+              style={{
+                transform: `rotateY(${itemAngle}deg) translateZ(${radius}px) scale(${scale})`,
+                filter: `blur(${blur}px)`,
+                opacity: opacity,
+                zIndex: zIndex,
+                WebkitBoxReflect: 'below 15px linear-gradient(transparent, rgba(0,0,0,0.15))'
+              }}
+            >
+              <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-black/20 backdrop-blur-sm">
+                <img 
+                  src={img.url} 
+                  alt={img.title} 
+                  className="w-full h-full object-cover pointer-events-none transition-transform duration-1000 group-hover:scale-110" 
+                />
+                
+                {/* Active Focus Glass Bar */}
+                <div className={`absolute bottom-6 left-6 right-6 glass-morphism p-4 rounded-2xl border-white/10 transition-all duration-700 delay-100 ${isFocus ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400 mb-1">Portfolio Asset</p>
+                  <h4 className="text-lg font-bold text-white tracking-tight">{img.title}</h4>
+                </div>
+                
+                {/* Quick Link Overlay */}
+                <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                   <div className="w-14 h-14 rounded-full glass-morphism border-cyan-400/50 flex items-center justify-center text-cyan-400 scale-0 group-hover:scale-100 transition-transform duration-500">
+                      <ExternalLink size={24} />
+                   </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Floor Glow / Ambient Shadow */}
+      <div className="absolute top-[80%] left-1/2 -translate-x-1/2 w-[800px] h-[100px] bg-cyan-500/10 blur-[80px] rounded-[100%] pointer-events-none -z-10"></div>
+      
+      {/* Drag Hint */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 text-gray-600 font-black uppercase tracking-[0.4em] text-[10px] pointer-events-none opacity-40">
+        <ArrowLeftRight size={14} />
+        Drag to Explore
+      </div>
+    </div>
+  );
+};
+
 // Floating WhatsApp Component with Branded SVG and Pulse Effect
 const FloatingWhatsApp: React.FC = () => {
   const whatsappUrl = "https://wa.me/923706487654";
@@ -63,10 +204,7 @@ const FloatingWhatsApp: React.FC = () => {
       aria-label="Chat with Taibe on WhatsApp"
     >
       <div className="relative">
-        {/* Pulse Glow Layer */}
         <div className="absolute inset-0 rounded-full animate-whatsapp-pulse -z-10"></div>
-        
-        {/* Main Button Container */}
         <div className="glass-morphism w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all duration-500 group-hover:-translate-y-3 group-hover:scale-110 shadow-2xl border-2 border-[#25D366] shadow-[#25D366]/20">
           <svg 
             width="32" 
@@ -78,8 +216,6 @@ const FloatingWhatsApp: React.FC = () => {
             <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-5.5-2.8-23.2-8.5-44.2-27.1-16.4-14.6-27.4-32.7-30.6-38.2-3.2-5.6-.3-8.6 2.4-11.3 2.5-2.4 5.5-6.5 8.3-9.7 2.8-3.3 3.7-5.5 5.5-9.3 1.9-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 13.3 5.7 23.7 9.1 31.7 11.7 13.3 4.2 25.4 3.6 35 2.2 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
           </svg>
         </div>
-        
-        {/* Tooltip */}
         <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-4 py-2 glass-morphism border-[#25D366]/30 rounded-xl opacity-0 translate-x-4 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 hidden md:block">
           <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-[#25D366]">Chat with Taibe</span>
         </div>
@@ -186,12 +322,14 @@ const TypewriterText: React.FC<{ words: string[] }> = ({ words }) => {
       return;
     }
 
-    const timeout = setTimeout(() => {
+    const nextTimeout = setTimeout(() => {
       setSubIndex((prev) => prev + (reverse ? -1 : 1));
     }, reverse ? 75 : 150);
 
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(nextTimeout);
   }, [subIndex, index, reverse, words]);
+
+  const timeoutRef = useRef<any>(null);
 
   return (
     <span className="inline-block min-w-[2ch]">
@@ -276,7 +414,6 @@ const BentoProjectCard: React.FC<{ project: Project; className?: string }> = ({ 
           borderColor: rotate.x !== 0 ? `${project.color}66` : 'rgba(255, 255, 255, 0.1)'
         }}
       >
-        {/* Project Image */}
         <div className="relative flex-grow overflow-hidden">
           <img 
             src={project.image} 
@@ -285,7 +422,6 @@ const BentoProjectCard: React.FC<{ project: Project; className?: string }> = ({ 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
           
-          {/* Status Badge */}
           <div className="absolute top-4 right-4 z-10">
             <div className="glass-morphism border-white/20 rounded-full px-4 py-1.5 flex items-center gap-2 shadow-2xl animate-float">
               {project.status?.icon || <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>}
@@ -294,12 +430,11 @@ const BentoProjectCard: React.FC<{ project: Project; className?: string }> = ({ 
           </div>
         </div>
 
-        {/* Project Content */}
         <div className="p-6 md:p-8 flex flex-col justify-end gap-4 relative">
           <h3 className="text-2xl font-black tracking-tighter text-white group-hover:text-metallic transition-colors">
             {project.title}
           </h3>
-          <p className="text-sm text-gray-400 font-light line-clamp-2 leading-relaxed">
+          <p className="text-sm text-gray-400 font-light line-clamp-2 leading-relaxed font-heading">
             {project.description}
           </p>
           
@@ -311,7 +446,6 @@ const BentoProjectCard: React.FC<{ project: Project; className?: string }> = ({ 
             ))}
           </div>
 
-          {/* Action Button (Slide Up on Hover) */}
           <div className="absolute inset-x-0 bottom-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
             <a 
               href={project.link} 
@@ -328,7 +462,6 @@ const BentoProjectCard: React.FC<{ project: Project; className?: string }> = ({ 
   );
 };
 
-// Redesigned SkillTile for the Mixed Bento Grid
 const SkillTile: React.FC<{ skill: Skill; index: number }> = ({ skill, index }) => {
   const Icon = IconMapper[skill.icon] || Code;
   const isDev = skill.category === 'Full Stack';
@@ -396,7 +529,7 @@ const App: React.FC = () => {
   const bioText = "Hello, I am Taibe Javed. A digital alchemist transforming abstract ideas into high-fidelity digital experiences. With deep expertise in the MERN stack and a soulful approach to graphic design, I build products that are as functional as they are beautiful. My process is a blend of rigorous logic and creative intuition, ensuring every pixel and every line of code serves a larger purpose. Currently pushing the boundaries of what's possible in web architecture and brand identity.";
 
   return (
-    <div className="mesh-gradient min-h-screen">
+    <div className="mesh-gradient min-h-screen bg-[#0a0a0a]">
       <CustomCursor />
       <FloatingWhatsApp />
       
@@ -534,8 +667,8 @@ const App: React.FC = () => {
       <SectionWrapper id={SectionId.Skills}>
         <div className="max-w-7xl w-full px-4">
           <div className="text-center mb-24">
-            <h2 className="text-4xl md:text-7xl font-black font-heading mb-6 tracking-tighter">
-              MIXED <span className="text-metallic">BENTO</span>
+            <h2 className="text-4xl md:text-7xl font-black font-heading mb-6 tracking-tighter uppercase">
+              Mixed <span className="text-metallic">Bento</span>
             </h2>
             <div className="flex items-center justify-center gap-4 text-xs font-black uppercase tracking-[0.3em] text-gray-500">
               <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyan-400"></div> DEVELOPMENT</span>
@@ -590,35 +723,42 @@ const App: React.FC = () => {
         </div>
       </SectionWrapper>
 
-      {/* Graphic Design Gallery */}
-      <SectionWrapper id={SectionId.DesignGallery} className="bg-black/50 overflow-hidden">
-        <div className="max-w-5xl w-full text-center relative">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-purple-500/5 blur-[160px] -z-10"></div>
-          <h2 className="text-4xl md:text-7xl font-black font-heading mb-8">
-            Visual <span className="text-cyan-400 underline decoration-purple-500/50 underline-offset-8">Gallery</span>
-          </h2>
-          <p className="text-xl text-gray-400 mb-16 font-light max-w-2xl mx-auto">
-            Where creative vision meets pixel precision. Discover my journey through professional branding and layout design.
-          </p>
-          <GeminiCard className="p-16 md:p-24 relative overflow-hidden group cursor-pointer transition-all duration-1000 hover:shadow-[0_0_100px_rgba(168,85,247,0.15)] !rounded-[3rem]" glowType="purple">
-            <div className="absolute inset-0 opacity-10 group-hover:opacity-40 transition-all duration-1000 transform group-hover:scale-105">
-              <img src="https://picsum.photos/seed/design/1600/1000" alt="Design Background" className="w-full h-full object-cover grayscale brightness-50" />
+      {/* New High-Performance 3D Stage Gallery Section */}
+      <SectionWrapper id={SectionId.DesignGallery} className="bg-[#0a0a0a] overflow-hidden">
+        <div className="max-w-7xl w-full text-center relative px-4">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-cyan-500/5 blur-[160px] -z-10"></div>
+          
+          <div className="mb-20">
+            <h2 className="text-5xl md:text-8xl font-black font-heading mb-6 tracking-tighter uppercase">
+              Visual <span className="text-metallic">Immersive</span>
+            </h2>
+            <p className="text-gray-500 text-xs font-black uppercase tracking-[0.5em] mb-4">Interactive Behance Showcase</p>
+            <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full glass-morphism border border-cyan-500/30">
+              <Eye className="text-cyan-400" size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white">Interactive 3D Stage</span>
             </div>
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="relative mb-10">
-                <Palette className="w-24 h-24 text-purple-500 transition-transform duration-1000 group-hover:rotate-[360deg] group-hover:scale-110" />
-                <div className="absolute -inset-6 bg-purple-500/30 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </div>
-              <h3 className="text-5xl font-black mb-6 transition-colors group-hover:text-purple-300 tracking-tighter">BEHANCE PORTFOLIO</h3>
-              <p className="text-gray-400 mb-12 max-w-lg text-lg font-light leading-relaxed">
-                A curated selection of high-fidelity visual assets, identity systems, and futuristic layouts for top-tier brands.
-              </p>
-              <a href="https://www.behance.net/Taibegraphics" target="_blank" rel="noopener noreferrer" className="relative inline-flex items-center gap-4 px-16 py-7 bg-white text-black font-black rounded-[2rem] transition-all hover:scale-110 active:scale-95 overflow-hidden group/btn uppercase tracking-[0.2em] text-sm">
-                <span className="absolute inset-0 bg-purple-600 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500 ease-out"></span>
-                <span className="relative z-10 flex items-center gap-3 group-hover/btn:text-white">OPEN SHOWCASE <ExternalLink size={24} /></span>
-              </a>
-            </div>
-          </GeminiCard>
+          </div>
+
+          {/* New 3D Carousel Container */}
+          <div className="mb-24">
+            <BehanceCarousel />
+          </div>
+
+          <div className="flex flex-col items-center gap-10">
+            <p className="max-w-xl text-gray-400 text-lg font-light leading-relaxed font-heading">
+              A spatial exploration of high-end branding and futuristic layout design. Scroll or drag to navigate the digital gallery.
+            </p>
+            
+            <a 
+              href="https://www.behance.net/Taibegraphics" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="relative inline-flex items-center gap-4 px-16 py-7 bg-white text-black font-black rounded-[2rem] transition-all hover:scale-110 active:scale-95 overflow-hidden group/btn uppercase tracking-[0.2em] text-sm shadow-2xl"
+            >
+              <span className="absolute inset-0 bg-cyan-600 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500 ease-out"></span>
+              <span className="relative z-10 flex items-center gap-3 group-hover/btn:text-white">VISIT BEHANCE STUDIO <ExternalLink size={24} /></span>
+            </a>
+          </div>
         </div>
       </SectionWrapper>
 
@@ -722,6 +862,9 @@ const App: React.FC = () => {
         }
         .animate-whatsapp-pulse {
           animation: whatsapp-pulse 2s infinite;
+        }
+        .backface-hidden {
+          backface-visibility: hidden;
         }
       `}</style>
     </div>
