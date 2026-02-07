@@ -6,6 +6,11 @@ export interface Project {
   link: string;
   image: string;
   tags: string[];
+  color?: string;
+  status?: {
+    label: string;
+    icon?: string;
+  };
 }
 
 export interface Skill {

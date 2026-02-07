@@ -22,7 +22,10 @@ import {
   User,
   Figma,
   Box,
-  Monitor
+  Monitor,
+  PenTool,
+  MessageCircle,
+  Eye
 } from 'lucide-react';
 import SectionWrapper from './components/SectionWrapper';
 import GeminiCard from './components/GeminiCard';
@@ -39,7 +42,12 @@ const IconMapper: Record<string, any> = {
   Figma,
   Layout,
   Monitor,
-  Box
+  Box,
+  Cpu,
+  Terminal,
+  Zap,
+  Type,
+  PenTool
 };
 
 // Floating WhatsApp Component with Branded SVG and Pulse Effect
@@ -60,7 +68,6 @@ const FloatingWhatsApp: React.FC = () => {
         
         {/* Main Button Container */}
         <div className="glass-morphism w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all duration-500 group-hover:-translate-y-3 group-hover:scale-110 shadow-2xl border-2 border-[#25D366] shadow-[#25D366]/20">
-          {/* Custom WhatsApp SVG (FontAwesome-like) */}
           <svg 
             width="32" 
             height="32" 
@@ -232,10 +239,10 @@ const BioTypewriter: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-const ProjectTiltCard: React.FC<{ project: Project }> = ({ project }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
+// New Bento Project Card Component
+const BentoProjectCard: React.FC<{ project: Project; className?: string }> = ({ project, className = "" }) => {
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
-  const glowType = Math.random() > 0.5 ? 'purple' : 'cyan';
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -255,49 +262,111 @@ const ProjectTiltCard: React.FC<{ project: Project }> = ({ project }) => {
   };
 
   return (
-    <div ref={cardRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} className="perspective-1000 h-full">
-      <GeminiCard glowType={glowType} className="group overflow-hidden !p-0 flex flex-col h-full !rounded-3xl relative transition-transform duration-200 ease-out preserve-3d" style={{ transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)` }}>
-        <div className="glass-shine-layer"></div>
-        <div className="relative h-56 overflow-hidden">
-          <img src={project.image} alt={project.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 transition-opacity"></div>
-          <div className="absolute top-6 right-6 p-3 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 opacity-0 group-hover:opacity-100 transition-all translate-y-[-10px] group-hover:translate-y-0 z-10">
-            <ExternalLink size={18} className={glowType === 'cyan' ? 'text-cyan-400' : 'text-purple-400'} />
+    <div 
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`perspective-1000 group relative ${className}`}
+    >
+      <div 
+        className="h-full w-full rounded-3xl overflow-hidden glass-morphism border border-white/10 transition-all duration-500 ease-out flex flex-col backdrop-blur-[20px]"
+        style={{ 
+          transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
+          boxShadow: rotate.x !== 0 ? `0 20px 40px -15px ${project.color}33` : 'none',
+          borderColor: rotate.x !== 0 ? `${project.color}66` : 'rgba(255, 255, 255, 0.1)'
+        }}
+      >
+        {/* Project Image */}
+        <div className="relative flex-grow overflow-hidden">
+          <img 
+            src={project.image} 
+            alt={project.title} 
+            className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-700 scale-[1.05] group-hover:scale-110" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+          
+          {/* Status Badge */}
+          <div className="absolute top-4 right-4 z-10">
+            <div className="glass-morphism border-white/20 rounded-full px-4 py-1.5 flex items-center gap-2 shadow-2xl animate-float">
+              {project.status?.icon || <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>}
+              <span className="text-[10px] font-black uppercase tracking-widest text-white">{project.status?.label}</span>
+            </div>
           </div>
         </div>
-        <div className="p-8 flex flex-col flex-grow relative z-10">
-          <h3 className={`text-2xl font-black mb-3 transition-colors tracking-tight ${glowType === 'cyan' ? 'group-hover:text-cyan-400' : 'group-hover:text-purple-400'}`}>
+
+        {/* Project Content */}
+        <div className="p-6 md:p-8 flex flex-col justify-end gap-4 relative">
+          <h3 className="text-2xl font-black tracking-tighter text-white group-hover:text-metallic transition-colors">
             {project.title}
           </h3>
-          <p className="text-gray-400 text-sm mb-6 line-clamp-2 leading-relaxed font-light">
+          <p className="text-sm text-gray-400 font-light line-clamp-2 leading-relaxed">
             {project.description}
           </p>
-          <div className="flex flex-wrap gap-2 mb-8 mt-auto">
+          
+          <div className="flex flex-wrap gap-2 mt-2">
             {project.tags.map(tag => (
-              <span key={tag} className={`text-[10px] uppercase font-black tracking-widest px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 transition-colors ${glowType === 'cyan' ? 'group-hover:border-cyan-500/30' : 'group-hover:border-purple-500/30'}`}>
-                {tag}
+              <span key={tag} className="text-[9px] font-black uppercase tracking-widest text-white/40 group-hover:text-white transition-colors">
+                #{tag}
               </span>
             ))}
           </div>
-          <a href={project.link} target="_blank" rel="noopener noreferrer" className={`flex items-center justify-center gap-2 w-full py-4 bg-white/5 rounded-2xl border border-white/10 font-black text-xs uppercase tracking-widest transition-all ${glowType === 'cyan' ? 'neon-btn-cyan hover:border-cyan-400/50' : 'neon-btn-purple hover:border-purple-400/50'}`}>
-            Launch Live <ExternalLink size={14} />
-          </a>
+
+          {/* Action Button (Slide Up on Hover) */}
+          <div className="absolute inset-x-0 bottom-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
+            <a 
+              href={project.link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-center gap-2 w-full py-4 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.02] transition-transform"
+            >
+              Live Link <ExternalLink size={14} />
+            </a>
+          </div>
         </div>
-      </GeminiCard>
+      </div>
     </div>
   );
 };
 
-const SkillTile: React.FC<{ skill: Skill; activeTab: string }> = ({ skill, activeTab }) => {
+// Redesigned SkillTile for the Mixed Bento Grid
+const SkillTile: React.FC<{ skill: Skill; index: number }> = ({ skill, index }) => {
   const Icon = IconMapper[skill.icon] || Code;
-  const isDev = activeTab === 'Full Stack';
+  const isDev = skill.category === 'Full Stack';
   
   return (
-    <div className={`group relative p-6 rounded-2xl glass-morphism border border-white/5 transition-all duration-500 hover:scale-105 hover:-translate-y-1 ${isDev ? 'hover:gemini-glow-cyan' : 'hover:gemini-glow-purple'}`}>
-      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity blur-xl ${isDev ? 'bg-cyan-500' : 'bg-purple-500'}`}></div>
-      <div className="relative flex flex-col items-center gap-4 text-center">
-        <Icon size={32} className={`transition-all duration-500 ${isDev ? 'text-cyan-400 group-hover:text-cyan-300' : 'text-purple-400 group-hover:text-purple-300'}`} />
-        <span className="text-[11px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">{skill.name}</span>
+    <div 
+      className={`group relative p-8 rounded-3xl glass-morphism border border-white/10 transition-all duration-500 hover:scale-110 hover:z-20 backdrop-blur-[15px] animate-glow-border ${
+        isDev ? 'hover:gemini-glow-cyan' : 'hover:gemini-glow-purple'
+      }`}
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
+      <div className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity blur-2xl ${isDev ? 'bg-cyan-500' : 'bg-purple-500'}`}></div>
+      
+      <div className="relative flex flex-col items-center gap-6 text-center h-full justify-center">
+        <Icon 
+          size={48} 
+          className={`transition-all duration-500 drop-shadow-2xl ${
+            isDev 
+              ? 'text-cyan-400 group-hover:text-cyan-300' 
+              : 'text-purple-400 group-hover:text-purple-300'
+          }`} 
+        />
+        <div className="space-y-4 w-full">
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-white transition-colors block">
+            {skill.name}
+          </span>
+          
+          <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <div 
+              className={`h-full rounded-full transition-all duration-1000 w-0 group-hover:w-[80%] ${
+                isDev 
+                  ? 'bg-cyan-500 shadow-[0_0_10px_rgba(34,211,238,0.8)]' 
+                  : 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.8)]'
+              }`}
+            ></div>
+          </div>
+          <span className="text-[10px] font-bold text-gray-600 group-hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity block">80% Proficiency</span>
+        </div>
       </div>
     </div>
   );
@@ -305,7 +374,6 @@ const SkillTile: React.FC<{ skill: Skill; activeTab: string }> = ({ skill, activ
 
 const App: React.FC = () => {
   const [activeNav, setActiveNav] = useState(SectionId.Home);
-  const [activeSkillTab, setActiveSkillTab] = useState<'Full Stack' | 'Design'>('Full Stack');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -326,8 +394,6 @@ const App: React.FC = () => {
   }, []);
 
   const bioText = "Hello, I am Taibe Javed. A digital alchemist transforming abstract ideas into high-fidelity digital experiences. With deep expertise in the MERN stack and a soulful approach to graphic design, I build products that are as functional as they are beautiful. My process is a blend of rigorous logic and creative intuition, ensuring every pixel and every line of code serves a larger purpose. Currently pushing the boundaries of what's possible in web architecture and brand identity.";
-
-  const filteredSkills = SKILLS.filter(s => s.category === activeSkillTab);
 
   return (
     <div className="mesh-gradient min-h-screen">
@@ -464,77 +530,62 @@ const App: React.FC = () => {
         </div>
       </SectionWrapper>
 
-      {/* Redesigned Skills Section with Tabbed View */}
+      {/* Futuristic Mixed Bento Grid Skills Section */}
       <SectionWrapper id={SectionId.Skills}>
-        <div className="max-w-6xl w-full px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black font-heading mb-12">
-              Technical <span className="text-metallic">Stacks</span>
+        <div className="max-w-7xl w-full px-4">
+          <div className="text-center mb-24">
+            <h2 className="text-4xl md:text-7xl font-black font-heading mb-6 tracking-tighter">
+              MIXED <span className="text-metallic">BENTO</span>
             </h2>
-            
-            <div className="inline-flex glass-morphism p-1.5 rounded-2xl border border-white/5 relative overflow-hidden">
-              <div 
-                className={`absolute inset-y-1.5 left-1.5 w-[calc(50%-1.5px)] rounded-xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                  activeSkillTab === 'Full Stack' ? 'translate-x-0 bg-cyan-500/20 gemini-glow-cyan' : 'translate-x-full bg-purple-500/20 gemini-glow-purple'
-                }`}
-              ></div>
-              <button 
-                onClick={() => setActiveSkillTab('Full Stack')}
-                className={`relative z-10 px-8 py-3 rounded-xl flex items-center gap-3 transition-colors duration-500 ${
-                  activeSkillTab === 'Full Stack' ? 'text-cyan-400' : 'text-gray-500'
-                }`}
-              >
-                <Code size={18} />
-                <span className="text-xs font-black uppercase tracking-widest">Development</span>
-              </button>
-              <button 
-                onClick={() => setActiveSkillTab('Design')}
-                className={`relative z-10 px-8 py-3 rounded-xl flex items-center gap-3 transition-colors duration-500 ${
-                  activeSkillTab === 'Design' ? 'text-purple-400' : 'text-gray-500'
-                }`}
-              >
-                <Palette size={18} />
-                <span className="text-xs font-black uppercase tracking-widest">Design</span>
-              </button>
+            <div className="flex items-center justify-center gap-4 text-xs font-black uppercase tracking-[0.3em] text-gray-500">
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyan-400"></div> DEVELOPMENT</span>
+              <span className="text-white/20">|</span>
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-purple-400"></div> DESIGN</span>
             </div>
           </div>
 
-          <div className="relative min-h-[400px]">
-             <div 
-              className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 transition-all duration-700 ease-out ${
-                activeSkillTab ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-95 blur-md'
-              }`}
-              key={activeSkillTab}
-             >
-                {filteredSkills.map((skill, i) => (
-                  <div 
-                    key={skill.name} 
-                    className="animate-in fade-in zoom-in duration-500" 
-                    style={{ animationDelay: `${i * 100}ms` }}
-                  >
-                    <SkillTile skill={skill} activeTab={activeSkillTab} />
-                  </div>
-                ))}
-             </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            {SKILLS.map((skill, i) => (
+              <SkillTile key={skill.name} skill={skill} index={i} />
+            ))}
           </div>
         </div>
       </SectionWrapper>
 
-      {/* Projects Section */}
-      <SectionWrapper id={SectionId.Projects}>
+      {/* Redesigned Projects Section - Featured Bento Grid */}
+      <SectionWrapper id={SectionId.Projects} className="bg-black/20">
         <div className="max-w-7xl w-full">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-heading">
-              Featured <span className="text-purple-500 underline decoration-purple-500/20 underline-offset-8">Projects</span>
+          <div className="text-center mb-24">
+            <h2 className="text-5xl md:text-8xl font-black font-heading mb-6 tracking-tighter uppercase">
+              Featured <span className="text-metallic">Bento</span>
             </h2>
-            <p className="text-gray-400 max-w-md text-center md:text-right font-light">
-              Architecting high-performance digital solutions with meticulous attention to detail.
-            </p>
+            <p className="text-gray-500 text-xs font-black uppercase tracking-[0.5em]">High-performance architecture</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 px-4">
-            {PROJECTS.map((project) => (
-              <ProjectTiltCard key={project.id} project={project} />
-            ))}
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-3 gap-8 h-auto md:h-[1200px]">
+            {/* 1. E-commerce: Large Square (Featured) */}
+            <BentoProjectCard 
+              project={PROJECTS[0]} 
+              className="md:col-span-2 md:row-span-2" 
+            />
+            
+            {/* 2. Pizza App: Wide Rect (Featured) */}
+            <BentoProjectCard 
+              project={PROJECTS[1]} 
+              className="md:col-span-2 md:row-span-1" 
+            />
+            
+            {/* 3. Bridal Saloon: Tall Vertical */}
+            <BentoProjectCard 
+              project={PROJECTS[2]} 
+              className="md:col-span-1 md:row-span-2" 
+            />
+            
+            {/* Small Tiles */}
+            <BentoProjectCard project={PROJECTS[3]} className="md:col-span-1 md:row-span-1" />
+            <BentoProjectCard project={PROJECTS[4]} className="md:col-span-1 md:row-span-1" />
+            <BentoProjectCard project={PROJECTS[5]} className="md:col-span-1 md:row-span-1" />
+            <BentoProjectCard project={PROJECTS[6]} className="md:col-span-1 md:row-span-1" />
           </div>
         </div>
       </SectionWrapper>
