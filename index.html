@@ -34,10 +34,6 @@
             box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
             border-color: rgba(6, 182, 212, 0.5);
         }
-        .gemini-glow-green {
-            box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
-            border-color: rgba(34, 197, 94, 0.6);
-        }
         .glass-morphism {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(15px);
@@ -54,15 +50,6 @@
         .mesh-gradient {
             background: radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
                         radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        .animate-shimmer {
-          background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-          background-size: 200% 100%;
-          animation: shimmer 3s infinite;
         }
         .text-metallic {
             background: linear-gradient(
@@ -97,49 +84,8 @@
             animation: pulse-ring 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
         }
 
-        /* 3D Tilt & Glass Shine */
         .perspective-1000 {
             perspective: 1000px;
-        }
-        @keyframes glass-shine {
-            0% { transform: translateX(-150%) skewX(-25deg); }
-            10% { transform: translateX(150%) skewX(-25deg); }
-            100% { transform: translateX(150%) skewX(-25deg); }
-        }
-        .glass-shine-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(
-                to right,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.15) 50%,
-                rgba(255, 255, 255, 0) 100%
-            );
-            transform: translateX(-150%) skewX(-25deg);
-            animation: glass-shine 5s infinite;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        /* Neon Buttons */
-        .neon-btn-cyan {
-            box-shadow: 0 0 5px rgba(34, 211, 238, 0.3);
-            transition: all 0.3s ease;
-        }
-        .neon-btn-cyan:hover {
-            box-shadow: 0 0 15px rgba(34, 211, 238, 0.8), 0 0 30px rgba(34, 211, 238, 0.4);
-            transform: translateY(-2px);
-        }
-        .neon-btn-purple {
-            box-shadow: 0 0 5px rgba(168, 85, 247, 0.3);
-            transition: all 0.3s ease;
-        }
-        .neon-btn-purple:hover {
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.8), 0 0 30px rgba(168, 85, 247, 0.4);
-            transform: translateY(-2px);
         }
 
         /* Custom Cursor Styles */
@@ -173,10 +119,10 @@
 <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
     "vite": "https://esm.sh/vite@^7.3.1",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3"
   }
@@ -185,6 +131,6 @@
 </head>
 <body>
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
